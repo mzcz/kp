@@ -42,6 +42,12 @@ public class BalanceController {
         return service.getBalanceReport();
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/activeCash")
+    public List<BalanceReportDto> getActiveCash() {
+        return service.getActiveCash();
+    }
+
+
     @RequestMapping(method = RequestMethod.GET, value = "/balance/{balanceId}")
     public BalanceDto getBalance(@PathVariable Long balanceId) throws TaskNotFoundException {
         return balanceMapper.mapToBalanceDto(service.getBalance(balanceId).orElseThrow(TaskNotFoundException::new));

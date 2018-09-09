@@ -1,6 +1,7 @@
 buildscript {
 	ext {
 		springBootVersion = '2.0.1.RELEASE'
+		generatedSourcesDir = file("src/main/generated")
 	}
 	repositories {
 		mavenCentral()
@@ -26,9 +27,19 @@ repositories {
 	mavenLocal()
 }
 
+sourceSets {
+	main {
+		java {
+			srcDir "src/main/java"
+			srcDir generatedSourcesDir
+		}
+	}
+}
+
 configurations {
 	jdbcdriver
 	xdb
+	querydslapt
 }
 
 dependencies {
@@ -45,10 +56,41 @@ dependencies {
 	compile('org.projectlombok:lombok')
 	//providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 
+	compile  "com.mysema.querydsl:querydsl-core:3.7.4"
+	compile  "com.mysema.querydsl:querydsl-jpa:3.7.4"
+	querydslapt  "com.mysema.querydsl:querydsl-apt:3.7.4"
+
 	//Swager
 	compile('io.springfox:springfox-swagger2:2.7.0')
 	compile('io.springfox:springfox-swagger-ui:2.7.0')
 	compile('com.google.code.gson:gson:2.8.2')
 
 	compile ('org.springframework.boot:spring-boot-starter-thymeleaf')
+
+	compile 'io.reactivex:rxjava:1.3.4'
+
 }
+
+configurations {
+	querydslapt
+}
+
+task generateQueryDSL(type: JavaCompile, group: 'build', description: 'Generates the QueryDSL query types') {
+	source = sourceSets.main.java
+	classpath = configurations.compile + configurations.querydslapt
+	options.compilerArgs = [
+			"-proc:only",
+			"-processor", "com.mysema.query.apt.jpa.JPAAnnotationProcessor"
+	]
+	destinationDir = generatedSourcesDir
+}
+compileJava {
+	doFirst {
+		generatedSourcesDir.mkdirs();
+	}
+	options.compilerArgs += ['-s', generatedSourcesDir]
+
+	dependsOn generateQueryDSL
+}
+
+
